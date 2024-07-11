@@ -1,0 +1,143 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with genimi</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/primeflex@3.2.1/primeflex.css" />
+    <link href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+    <style>
+        .chat-message {
+            background-color: #f3f4f6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .chat-message-sender {
+            background-color: #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: right;
+        }
+
+        .sidebar {
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .chat-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .markdown-content {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+<div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="w-1/4 bg-white border-r sidebar">
+        <div class="p-4 flex justify-between items-center border-b">
+            <h2 class="text-lg font-bold">Chats</h2>
+            <i class="pi pi-ellipsis-h"></i>
+        </div>
+        <div class="p-4">
+            <div class="flex items-center p-2 hover:bg-gray-100 cursor-pointer">
+                <img src="https://media.licdn.com/dms/image/D4E35AQE8PmZLt6hHlw/profile-framedphoto-shrink_200_200/0/1700321230029?e=1721325600&v=beta&t=yopqaD4HJbfAP4oKFm-zUaX5TqYLAzQwfjem8qy84EE" class="rounded-full" style="width: 20%;" alt="User Image">
+                <div class="ml-2">
+                    <h3 class="text-md font-semibold">First</h3>
+                    <p class="text-sm text-gray-600">Last message...</p>
+                </div>
+                <i class="pi pi-ellipsis-h ml-auto"></i>
+            </div>
+            <!-- Add more chat items here -->
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="w-3/4 chat-container">
+        <div class="p-4 border-b flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="https://media.licdn.com/dms/image/D4E35AQE8PmZLt6hHlw/profile-framedphoto-shrink_200_200/0/1700321230029?e=1721325600&v=beta&t=yopqaD4HJbfAP4oKFm-zUaX5TqYLAzQwfjem8qy84EE" class="rounded-full" style="width: 20%;" alt="User Image">
+                <div class="ml-2">
+                    <h3 class="text-lg font-semibold">Serge Noah</h3>
+                    <p class="text-sm text-gray-600">Contact me  <a style="color: blue;" href="https://www.linkedin.com/in/serge-gaetan-noah-mvondo-9a268a259/" target="_blank">here</a></p>
+                </div>
+            </div>
+            <i class="pi pi-cog"></i>
+        </div>
+        <div id="chat-messages" class="p-4 messages overflow-y-auto">
+            
+        </div>
+        <div class="p-4 border-t flex items-center">
+            <input type="text" id="message-input" class="w-full p-2 border rounded-lg" placeholder="Type a message...">
+            <button class="ml-2 p-2 bg-blue-500  rounded-lg"  title="Send" onclick="sendMessage()">
+                <i class="pi pi-send"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "@google/generative-ai": "https://esm.run/@google/generative-ai"
+  }
+}
+</script>
+
+<script type="module">
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const API_KEY = "AIzaSyCgmx4FoD4yjrGtyltsOKffopY9-z63ooc";
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+window.sendMessage = async function() {
+    const messageInput = document.getElementById("message-input");
+    const message = messageInput.value;
+    
+    if (message.trim() === "") return;
+
+    // Display the sender's message in the chat
+    displayMessage(message, 'chat-message-sender');
+
+    // Clear the input field
+    messageInput.value = "";
+
+    // Generate a response using Google Generative AI
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(message);
+    const response = await result.response;
+    const text = await response.text();
+
+    // Display the AI's response in the chat, converted from markdown to HTML
+    displayMessage(marked.parse(text), 'chat-message');
+}
+
+function displayMessage(text, className) {
+    const messagesContainer = document.getElementById("chat-messages");
+    const messageElement = document.createElement("div");
+    messageElement.className = `${className} markdown-content`;
+    messageElement.innerHTML = `<p>${text}</p>`;
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight; 
+    hljs.highlightAll(); // Initialiser la coloration syntaxique pour tous les blocs de code
+
+}
+</script>
+
+</body>
+</html>
